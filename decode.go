@@ -276,6 +276,7 @@ type decodeState struct {
 	}
 	savedError error
 	useNumber  bool
+	useOrderedObject bool
 }
 
 // errPhase is used for errors that should not happen unless
@@ -604,9 +605,13 @@ func (d *decodeState) object(v reflect.Value) {
 	}
 	v = pv
 
+	// If we are decoding into a OrderedObject then use an OrderedObject
+	// just for this particular object even if UseOrderedObject was not called.
+	forceOrderedObject := v.Type() == orderedObjectType
+
 	// Decoding into nil interface?  Switch to non-reflect code.
-	if v.Kind() == reflect.Interface && v.NumMethod() == 0 {
-		v.Set(reflect.ValueOf(d.objectInterface()))
+	if (v.Kind() == reflect.Interface && v.NumMethod() == 0) || forceOrderedObject {
+		v.Set(reflect.ValueOf(d.objectInterface(forceOrderedObject)))
 		return
 	}
 
@@ -1014,7 +1019,7 @@ func (d *decodeState) valueInterface() interface{} {
 	case scanBeginArray:
 		return d.arrayInterface()
 	case scanBeginObject:
-		return d.objectInterface()
+		return d.objectInterface(false)
 	case scanBeginLiteral:
 		return d.literalInterface()
 	}
@@ -1048,9 +1053,10 @@ func (d *decodeState) arrayInterface() []interface{} {
 	return v
 }
 
-// objectInterface is like object but returns map[string]interface{}.
-func (d *decodeState) objectInterface() map[string]interface{} {
+// objectInterface is like object but returns map[string]interface{} or []OrderedObject.
+func (d *decodeState) objectInterface(forceOrderedObject bool) interface{} {
 	m := make(map[string]interface{})
+	v := make(OrderedObject, 0)
 	for {
 		// Read opening " of string key or closing }.
 		op := d.scanWhile(scanSkipSpace)
@@ -1080,7 +1086,11 @@ func (d *decodeState) objectInterface() map[string]interface{} {
 		}
 
 		// Read value.
-		m[key] = d.valueInterface()
+		if d.useOrderedObject || forceOrderedObject {
+			v = append(v, Member{Key: key, Value: d.valueInterface()})
+		} else {
+			m[key] = d.valueInterface()
+		}
 
 		// Next token must be , or }.
 		op = d.scanWhile(scanSkipSpace)
@@ -1091,7 +1101,12 @@ func (d *decodeState) objectInterface() map[string]interface{} {
 			d.error(errPhase)
 		}
 	}
-	return m
+
+	if d.useOrderedObject || forceOrderedObject {
+		return v
+	} else {
+		return m
+	}
 }
 
 // literalInterface is like literal but returns an interface value.

@@ -35,6 +35,10 @@ func NewDecoder(r io.Reader) *Decoder {
 // Number instead of as a float64.
 func (dec *Decoder) UseNumber() { dec.d.useNumber = true }
 
+// UseOrderedObject causes the Decoder to unmarshal an object into an interface{}
+// as a OrderedObject instead of as a map[string]interface{}.
+func (dec *Decoder) UseOrderedObject() { dec.d.useOrderedObject = true }
+
 // Decode reads the next JSON-encoded value from its
 // input and stores it in the value pointed to by v.
 //
@@ -265,6 +269,55 @@ func (m *RawMessage) UnmarshalJSON(data []byte) error {
 
 var _ Marshaler = (*RawMessage)(nil)
 var _ Unmarshaler = (*RawMessage)(nil)
+
+// Member is used to store key/value pairs in an OrderedObject.
+type Member struct {
+	Key   string
+	Value interface{}
+}
+
+// OrderedObject stores the key/value pairs of a JSON object in the order
+// in which they appeared in the original document. See the documentation for UseOrderedObject on the Decoder.
+//
+// OrderedObject is used to enable decoding of arbitrary JSON objects while preserving
+// the order of the keys. Unmarshal and Decoder.Decode are supported.
+//
+//   var o OrderedObject
+//   Unmarshal(json, &o)     // decode JSON object, while preserving key order
+//
+//   var oa []OrderedObject
+//   Unmarshal(json, &oa)    // decode an array of JSON objects, while preserving key order
+//
+//   var v interface{}
+//   d := new Decoder(json)
+//   d.UseOrderedObject()    // decode all JSON objects as OrderedObject rather than map[string]interface{}
+//   d.Decode(&v)
+//
+//   type A struct {
+//       B     bool
+//       Inner OrderedObject
+//       I     int
+//   }
+//   var a A
+//   Unmarshal(&a)           // decode A as a JSON object with Inner as a nested object, preserving key order
+//
+// OrderedObject can also be used to encode a JSON object in
+// a specified order. Marshal and Encoder.Encode are supported.
+//
+//    var o OrderedObject
+//    Marshal(o)             // encode JSON object, each with keys in OrderedObject order
+//
+//    var oa []OrderedObject
+//    Marshal(oa)            // encode an array of JSON objects, with keys in OrderedObject order
+//
+//    type A struct {
+//       B     bool
+//       Inner OrderedObject
+//       I     int
+//    }
+//    var a A = createA()
+//    Marshal(a)             // encode A as a JSON object with Inner as a nested object
+type OrderedObject []Member
 
 // A Token holds a value of one of these types:
 //

@@ -887,3 +887,36 @@ func TestMarshalRawMessageValue(t *testing.T) {
 		}
 	}
 }
+
+type ObjEnc struct {
+	A int
+	B OrderedObject
+	C interface{}
+}
+
+var orderedObjectTests = []struct {
+	in  interface{}
+	out string
+}{
+	{OrderedObject{}, `{}`},
+	{OrderedObject{Member{"A", []int{1, 2, 3}}, Member{"B", 23}, Member{"C", "C"}}, `{"A":[1,2,3],"B":23,"C":"C"}`},
+	{ObjEnc{A: 234, B: OrderedObject{Member{"K", "V"}, Member{"V", 4}}}, `{"A":234,"B":{"K":"V","V":4},"C":null}`},
+	{ObjEnc{A: 234, B: OrderedObject{}, C: OrderedObject{{"A", 0}}}, `{"A":234,"B":{},"C":{"A":0}}`},
+	{[]OrderedObject{{{"A", "Ay"}, {"B", "Bee"}}, {{"A", "Nay"}}}, `[{"A":"Ay","B":"Bee"},{"A":"Nay"}]`},
+	{map[string]OrderedObject{"A": {{"A", "Ay"}, {"B", "Bee"}}}, `{"A":{"A":"Ay","B":"Bee"}}`},
+	{map[string]interface{}{"A": OrderedObject{{"A", "Ay"}, {"B", "Bee"}}}, `{"A":{"A":"Ay","B":"Bee"}}`},
+}
+
+func TestEncodeOrderedObject(t *testing.T) {
+	for i, o := range orderedObjectTests {
+		d, err := Marshal(o.in)
+		if err != nil {
+			t.Errorf("Unexpected error %v", err)
+			continue
+		}
+		ds := string(d)
+		if o.out != ds {
+			t.Errorf("#%d expected '%v', was '%v'", i, o.out, ds)
+		}
+	}
+}

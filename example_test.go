@@ -6,7 +6,7 @@ package json_test
 
 import (
 	"bytes"
-	"encoding/json"
+	"github.com/virtuald/go-ordered-json"
 	"fmt"
 	"io"
 	"log"
@@ -272,4 +272,44 @@ func ExampleIndent() {
 	// =		"Number": 51
 	// =	}
 	// =]
+}
+
+func ExampleOrderedObject() {
+	var jsonBlob = []byte(`[
+		{"name": "Issac Newton", "born": 1643, "died": 1727 },
+		{"name": "André-Marie Ampère", "born": 1777, "died": 1836 }
+	]`)
+	var people []json.OrderedObject
+
+	// Decode JSON while preserving the order of JSON key pairs.
+	err := json.Unmarshal(jsonBlob, &people)
+	if err != nil {
+		fmt.Println("unmarshalling error:", err)
+	}
+	fmt.Printf("Decoded:\n")
+	for _, v := range people {
+		for _, a := range v {
+			fmt.Printf(" %v=%v", a.Key, a.Value)
+		}
+		fmt.Printf("\n")
+	}
+
+	// Encode JSON keys in the order defined by the OrderedObject.
+	person := json.OrderedObject{
+		{Key: "name", Value: "Hans Christian Ørsted"},
+		{Key: "born", Value: 1777},
+		{Key: "died", Value: 1851},
+		{Key: "nationality", Value: "Danish"},
+	}
+	b, err := json.Marshal(person)
+	if err != nil {
+		fmt.Println("marshalling error:", err)
+	}
+	fmt.Printf("Encoded:\n %v", string(b))
+	// Output:
+	// Decoded:
+	//  name=Issac Newton born=1643 died=1727
+	//  name=André-Marie Ampère born=1777 died=1836
+	// Encoded:
+	//  {"name":"Hans Christian Ørsted","born":1777,"died":1851,"nationality":"Danish"}
 }
