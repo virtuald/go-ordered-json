@@ -25,6 +25,8 @@ import (
 	"sync/atomic"
 	"unicode"
 	"unicode/utf8"
+	// new in golang 1.9
+	"golang.org/x/sync/syncmap"
 )
 
 // Marshal returns the JSON encoding of v.
@@ -332,7 +334,7 @@ type encOpts struct {
 
 type encoderFunc func(e *encodeState, v reflect.Value, opts encOpts)
 
-var encoderCache sync.Map // map[reflect.Type]encoderFunc
+var encoderCache syncmap.Map // map[reflect.Type]encoderFunc
 
 func valueEncoder(v reflect.Value) encoderFunc {
 	if !v.IsValid() {
