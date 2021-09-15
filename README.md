@@ -1,4 +1,4 @@
-go-ordered-json
+nspcc-dev fork of go-ordered-json
 ===============
 
 There are some legacy/stupid applications[1] that you need to interoperate with,
@@ -19,3 +19,17 @@ Known broken applications
 -------------------------
 
 * [1][Windows Communication Foundation Json __type ordering](https://docs.microsoft.com/en-us/dotnet/framework/wcf/feature-details/stand-alone-json-serialization#type-hint-position-in-json-objects)
+* [2][NEO node](https://github.com/neo-project/neo/tree/master/src/neo/IO/Json)
+
+Fork motivations
+-------------------------
+
+NEO project has its own implementation of JSON serializer which is more a JSON
+dialect rather than standard-compatible implementation. Until JSON serialisation
+format affects contract states we need to be byte-to-byte compatible with the
+reference JSON serializer. This fork contains the following compatibility quirks:
+
+* JSON serializer is ordered (see https://github.com/nspcc-dev/neo-go/pull/2026)
+* JSON serializer escapes non-ascii characters while marshalling (see https://github.com/nspcc-dev/neo-go/pull/2174)
+
+More compatibility quirks may be added in the future.
