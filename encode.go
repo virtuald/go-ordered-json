@@ -24,6 +24,7 @@ import (
 	"sync"
 	"sync/atomic"
 	"unicode"
+	"unicode/utf16"
 	"unicode/utf8"
 	// new in golang 1.9
 	"golang.org/x/sync/syncmap"
@@ -966,7 +967,17 @@ func (e *encodeState) string(s string, escapeHTML bool) int {
 			start = i
 			continue
 		}
+		if start < i {
+			e.WriteString(s[start:i])
+		}
+		if c < 0x10000 {
+			e.WriteString(fmt.Sprintf(`\u%04X`, c))
+		} else {
+			r1, r2 := utf16.EncodeRune(c)
+			e.WriteString(fmt.Sprintf(`\u%04X\u%04X`, r1, r2))
+		}
 		i += size
+		start = i
 	}
 	if start < len(s) {
 		e.WriteString(s[start:])
@@ -1043,7 +1054,17 @@ func (e *encodeState) stringBytes(s []byte, escapeHTML bool) int {
 			start = i
 			continue
 		}
+		if start < i {
+			e.Write(s[start:i])
+		}
+		if c < 0x10000 {
+			e.WriteString(fmt.Sprintf(`\u%04X`, c))
+		} else {
+			r1, r2 := utf16.EncodeRune(c)
+			e.WriteString(fmt.Sprintf(`\u%04X\u%04X`, r1, r2))
+		}
 		i += size
+		start = i
 	}
 	if start < len(s) {
 		e.Write(s[start:])

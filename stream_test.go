@@ -36,7 +36,7 @@ null
 true
 false
 ["a","b","c"]
-{"ß":"long s","K":"Kelvin"}
+{"\u00DF":"long s","\u212A":"Kelvin"}
 3.14
 `
 
@@ -71,8 +71,8 @@ false
 >."c"
 >]
 {
->."ß": "long s",
->."K": "Kelvin"
+>."\u00DF": "long s",
+>."\u212A": "Kelvin"
 >}
 3.14
 `

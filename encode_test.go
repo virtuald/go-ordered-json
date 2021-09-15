@@ -231,6 +231,19 @@ func (CText) MarshalText() ([]byte, error) {
 	return []byte(`"<&>"`), nil
 }
 
+
+func TestMarshaler_NeoGo_PR2174(t *testing.T) {
+	source := "IOU（欠条币）：一种支持负数的NEP-17（非严格意义上的）资产，合约无存储区，账户由区块链浏览器统计"
+	b, err := Marshal(source)
+	if err != nil {
+		t.Fatalf("Marshal(c): %v", err)
+	}
+	want := `"` + `IOU\uFF08\u6B20\u6761\u5E01\uFF09\uFF1A\u4E00\u79CD\u652F\u6301\u8D1F\u6570\u7684NEP-17\uFF08\u975E\u4E25\u683C\u610F\u4E49\u4E0A\u7684\uFF09\u8D44\u4EA7\uFF0C\u5408\u7EA6\u65E0\u5B58\u50A8\u533A\uFF0C\u8D26\u6237\u7531\u533A\u5757\u94FE\u6D4F\u89C8\u5668\u7EDF\u8BA1` + `"`
+	if got := string(b); got != want {
+		t.Errorf("Marshal(c) = %#q, want %#q", got, want)
+	}
+}
+
 func TestMarshalerEscaping(t *testing.T) {
 	var c C
 	want := `"\u003c\u0026\u003e"`

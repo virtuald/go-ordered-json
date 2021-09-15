@@ -863,7 +863,7 @@ var badUTF8 = []struct {
 	{"\xff", `"\ufffd"`},
 	{"\xff\xff", `"\ufffd\ufffd"`},
 	{"a\xffb", `"a\ufffdb"`},
-	{"\xe6\x97\xa5\xe6\x9c\xac\xff\xaa\x9e", `"日本\ufffd\ufffd\ufffd"`},
+	{"\xe6\x97\xa5\xe6\x9c\xac\xff\xaa\x9e", `"\u65E5\u672C\ufffd\ufffd\ufffd"`},
 }
 
 func TestMarshalBadUTF8(t *testing.T) {
